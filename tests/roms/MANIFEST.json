@@ -1,0 +1,5 @@
+{
+  "$schema": "./manifest-schema.json",
+  "description": "Homebrew ROMs with libre licenses for testing. Only ROMs listed here may be used.",
+  "roms": []
+}

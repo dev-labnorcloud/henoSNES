@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "henosnes",
+  "version-semver": "0.0.1",
+  "description": "henoSNES — Open source SNES emulator",
+  "license": "GPL-3.0-or-later",
+  "builtin-baseline": "dd3124267f18a2dd4b7107dfa79fe1fbe363b90c",
+  "dependencies": [
+    "catch2"
+  ],
+  "default-features": [],
+  "features": {
+    "frontend": {
+      "description": "Qt 6 frontend with SDL3 platform layer",
+      "dependencies": [
+        "qtbase",
+        "qtdeclarative",
+        "sdl3",
+        "imgui",
+        "libsamplerate",
+        "libarchive",
+        "zstd",
+        "enet"
+      ]
+    },
+    "gfx-vulkan": {
+      "description": "Vulkan 1.3 rendering backend",
+      "dependencies": [
+        "glslang",
+        "spirv-cross"
+      ]
+    },
+    "gfx-d3d12": {
+      "description": "Direct3D 12 rendering backend (uses system SDK)",
+      "dependencies": []
+    },
+    "gfx-metal": {
+      "description": "Metal 3 rendering backend (uses system framework)",
+      "dependencies": []
+    },
+    "gfx-opengl": {
+      "description": "OpenGL 3.3 / GLES 3.0 legacy rendering backend",
+      "dependencies": [
+        "glad"
+      ]
+    }
+  }
+}

@@ -1,0 +1,30 @@
+# Build directories
+build/
+out/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# CMake
+CMakeUserPresets.json
+
+# vcpkg
+vcpkg_installed/
+
+# Compiled objects
+*.o
+*.obj
+*.lib
+*.a
+*.dll
+*.so
+*.dylib
+*.exe
+
+# OS files
+.DS_Store
+Thumbs.db

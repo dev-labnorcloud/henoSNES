@@ -1,0 +1,19 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: henoSNES
+Upstream-Contact: https://github.com/nickheno/henoSNES/issues
+
+Files: *.json
+Copyright: 2026 henoSNES contributors
+License: GPL-3.0-or-later
+
+Files: CMakePresets.json
+Copyright: 2026 henoSNES contributors
+License: GPL-3.0-or-later
+
+Files: .clang-format .clang-tidy
+Copyright: 2026 henoSNES contributors
+License: GPL-3.0-or-later
+
+Files: LICENSES/*
+Copyright: 2007 Free Software Foundation, Inc.
+License: GPL-3.0-or-later

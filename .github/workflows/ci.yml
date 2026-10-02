@@ -1,0 +1,124 @@
+# SPDX-FileCopyrightText: 2026 henoSNES contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: CI
+
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+    branches: [main]
+
+env:
+  VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            preset: windows-msvc
+            configure-preset: windows-msvc
+            build-preset: windows-msvc-release
+            test-preset: windows-msvc-release
+            cache-tool: sccache
+            artifact-name: heno-cli-windows
+            artifact-path: build/windows-msvc/tools/heno-cli/Release/heno-cli.exe
+
+          - os: ubuntu-24.04
+            preset: linux-clang
+            configure-preset: linux-clang-release
+            build-preset: linux-clang-release
+            test-preset: linux-clang-release
+            cache-tool: ccache
+            artifact-name: heno-cli-linux
+            artifact-path: build/linux-clang-release/tools/heno-cli/heno-cli
+
+          - os: macos-14
+            preset: macos-arm64
+            configure-preset: macos-arm64-release
+            build-preset: macos-arm64-release
+            test-preset: macos-arm64-release
+            cache-tool: ccache
+            artifact-name: heno-cli-macos-arm64
+            artifact-path: build/macos-arm64-release/tools/heno-cli/heno-cli
+
+          # TODO: Review runner availability — macos-13 is the last Intel
+          # macOS runner as of Oct 2026. Replace with macos-15-intel if/when
+          # GitHub makes it available. Review date: 2027-01-01
+          - os: macos-13
+            preset: macos-x64
+            configure-preset: macos-x64-release
+            build-preset: macos-x64-release
+            test-preset: macos-x64-release
+            cache-tool: ccache
+            artifact-name: heno-cli-macos-x64
+            artifact-path: build/macos-x64-release/tools/heno-cli/heno-cli
+
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} (${{ matrix.preset }})
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: dd3124267f18a2dd4b7107dfa79fe1fbe363b90c
+
+      - name: Export GitHub Actions cache variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Install ccache/sccache
+        if: matrix.cache-tool == 'ccache'
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: ${{ matrix.os }}-${{ matrix.preset }}
+
+      - name: Install sccache (Windows)
+        if: matrix.cache-tool == 'sccache'
+        uses: mozilla-actions/sccache-action@v0.0.6
+
+      - name: Install Clang 17 (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+          sudo add-apt-repository -y "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-17 main"
+          sudo apt-get update
+          sudo apt-get install -y clang-17 lld-17
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 100
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 100
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Configure (CMake)
+        run: >
+          cmake --preset ${{ matrix.configure-preset }}
+          -DCMAKE_C_COMPILER_LAUNCHER=${{ matrix.cache-tool }}
+          -DCMAKE_CXX_COMPILER_LAUNCHER=${{ matrix.cache-tool }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.build-preset }}
+
+      - name: Test
+        run: ctest --preset ${{ matrix.test-preset }} --output-on-failure
+
+      - name: Verify heno-cli --version
+        shell: bash
+        run: |
+          ./${{ matrix.artifact-path }} --version
+
+      - name: Upload heno-cli artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.artifact-path }}
+          if-no-files-found: error

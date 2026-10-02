@@ -1,0 +1,192 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "_base",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "HENO_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "windows-msvc",
+      "inherits": "_base",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/windows-msvc",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl"
+      }
+    },
+    {
+      "name": "linux-clang-debug",
+      "inherits": "_base",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-clang-debug",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "linux-clang-release",
+      "inherits": "_base",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-clang-release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "macos-arm64-debug",
+      "inherits": "_base",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/macos-arm64-debug",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_OSX_ARCHITECTURES": "arm64"
+      }
+    },
+    {
+      "name": "macos-arm64-release",
+      "inherits": "_base",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/macos-arm64-release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_OSX_ARCHITECTURES": "arm64"
+      }
+    },
+    {
+      "name": "macos-x64-debug",
+      "inherits": "_base",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/macos-x64-debug",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_OSX_ARCHITECTURES": "x86_64"
+      }
+    },
+    {
+      "name": "macos-x64-release",
+      "inherits": "_base",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/macos-x64-release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_OSX_ARCHITECTURES": "x86_64"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-msvc-debug",
+      "configurePreset": "windows-msvc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-release",
+      "configurePreset": "windows-msvc",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux-clang-debug",
+      "configurePreset": "linux-clang-debug"
+    },
+    {
+      "name": "linux-clang-release",
+      "configurePreset": "linux-clang-release"
+    },
+    {
+      "name": "macos-arm64-debug",
+      "configurePreset": "macos-arm64-debug"
+    },
+    {
+      "name": "macos-arm64-release",
+      "configurePreset": "macos-arm64-release"
+    },
+    {
+      "name": "macos-x64-debug",
+      "configurePreset": "macos-x64-debug"
+    },
+    {
+      "name": "macos-x64-release",
+      "configurePreset": "macos-x64-release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "windows-msvc-debug",
+      "configurePreset": "windows-msvc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-release",
+      "configurePreset": "windows-msvc",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux-clang-debug",
+      "configurePreset": "linux-clang-debug"
+    },
+    {
+      "name": "linux-clang-release",
+      "configurePreset": "linux-clang-release"
+    },
+    {
+      "name": "macos-arm64-debug",
+      "configurePreset": "macos-arm64-debug"
+    },
+    {
+      "name": "macos-arm64-release",
+      "configurePreset": "macos-arm64-release"
+    },
+    {
+      "name": "macos-x64-debug",
+      "configurePreset": "macos-x64-debug"
+    },
+    {
+      "name": "macos-x64-release",
+      "configurePreset": "macos-x64-release"
+    }
+  ]
+}
