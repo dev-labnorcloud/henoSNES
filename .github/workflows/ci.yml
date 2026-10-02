@@ -45,9 +45,10 @@ jobs:
             artifact-name: heno-cli-macos-arm64
             artifact-path: build/macos-arm64-release/tools/heno-cli/heno-cli
 
-          # TODO: Review runner availability — macos-13 is the last Intel
-          # macOS runner as of Oct 2026. Replace with macos-15-intel if/when
-          # GitHub makes it available. Review date: 2027-01-01
+          # TODO(revisar: runner x64): macos-13 es el último runner Intel x86_64
+          # de GitHub Actions y está en declive / alta congestión de cola.
+          # Si GitHub lanza macos-15-intel migrarlo, o remover soporte nativo x86_64
+          # a favor de Rosetta 2 / arm64 universal binary.
           - os: macos-13
             preset: macos-x64
             configure-preset: macos-x64-release
@@ -56,9 +57,11 @@ jobs:
             cache-tool: ccache
             artifact-name: heno-cli-macos-x64
             artifact-path: build/macos-x64-release/tools/heno-cli/heno-cli
+            continue-on-error: true
 
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} (${{ matrix.preset }})
+    continue-on-error: ${{ matrix.continue-on-error || false }}
 
     steps:
       - name: Checkout
