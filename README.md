@@ -9,8 +9,7 @@ rendering backends (Vulkan 1.3, Direct3D 12, Metal 3, OpenGL 3.3).
 
 ## Status
 
-**Phase 0 — Bootstrap.** Repository structure, build system, and CI.
-No emulation implemented yet.
+**Phase 1 — Minimal core (in progress).** The cooperative scheduler (P1-005) and the memory bus with LoROM/HiROM mapping (P1-006) are implemented and tested. The CPU, PPU and APU are not implemented yet, so no game runs.
 
 ## Build
 
