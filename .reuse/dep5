@@ -17,3 +17,8 @@ License: GPL-3.0-or-later
 Files: LICENSES/*
 Copyright: 2007 Free Software Foundation, Inc.
 License: GPL-3.0-or-later
+
+Files: docs/refs/*.md docs/adr/*.md
+Copyright: 2026 henoSNES contributors
+License: CC-BY-4.0
+
