@@ -20,6 +20,7 @@ backends gráficos intercambiables (Vulkan 1.3, Direct3D 12, Metal 3, OpenGL 3.3
    con URL de origen, commit y licencia.
 4. El nombre "henoSNES" usa "SNES" solo de forma descriptiva. No reproducir logotipos, tipografías
    ni diseños de Nintendo en ningún asset.
+5. El autor y Signed-off-by de los commits deben corresponder al humano responsable del merge, no a la IA. El agente debe usar la identidad configurada en el entorno local.
 
 ## Convenciones de código
 
