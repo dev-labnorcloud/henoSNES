@@ -3,20 +3,20 @@
 
 # Referencia 65C816: Tabla de Opcodes
 
-Esta tabla documenta los 256 opcodes del procesador 65C816 y sirve como Ãºnica fuente de verdad para la emulaciÃ³n ciclo a ciclo.
+Esta tabla documenta los 256 opcodes del procesador 65C816 y sirve como única fuente de verdad para la emulación ciclo a ciclo.
 
 ## Modificadores de Ciclo (Condiciones)
 - **m2**: +2 ciclos si el flag M está en 0 (acumulador/memoria de 16 bits)
-- **m**: +1 ciclo si el flag M estÃ¡ en 0 (acumulador/memoria de 16 bits)
-- **x**: +1 ciclo si el flag X estÃ¡ en 0 (Ã­ndice de 16 bits)
+- **m**: +1 ciclo si el flag M está en 0 (acumulador/memoria de 16 bits)
+- **x**: +1 ciclo si el flag X está en 0 (índice de 16 bits)
 - **e**: +1 ciclo en modo nativo (flag E=0)
 - **p***: +1 ciclo si hay cruce de página o si el flag X está en 0 (índice de 16 bits)
-- **p**: +1 ciclo si hay cruce de pÃ¡gina (aplica en Ã­ndices de 16 bits)
-- **d**: +1 ciclo si la PÃ¡gina Directa no estÃ¡ alineada a pÃ¡gina (DL != 0)
-- **b**: +1 ciclo si el salto (branch) es tomado; +1 extra si hay cruce de pÃ¡gina (solo en modo emulaciÃ³n)
+- **p**: +1 ciclo si hay cruce de página (aplica en índices de 16 bits)
+- **d**: +1 ciclo si la Página Directa no está alineada a página (DL != 0)
+- **b**: +1 ciclo si el salto (branch) es tomado; +1 extra si hay cruce de página (solo en modo emulación)
 - **s**: ciclo atado a velocidad de la memoria de acuerdo a su dominio
 
-| Opcode | MnemÃ³nico | Modo de Direccionamiento | Bytes | Ciclos Base | Condiciones Extra | Fuente |
+| Opcode | Mnemónico | Modo de Direccionamiento | Bytes | Ciclos Base | Condiciones Extra | Fuente |
 | --- | --- | --- | --- | --- | --- | --- |
 | `$00` | BRK | s | 2 | 7 | e | derivada del modelo, pendiente de verificación |
 | `$01` | ORA | (d,X) | 2 | 6 | m,d | derivada del modelo, pendiente de verificación |
