@@ -3,6 +3,8 @@
 
 # Referencia 65C816: Tabla de Opcodes
 
+**ADVERTENCIA: tabla derivada de un modelo de lenguaje, sin verificar contra fuente primaria. No implementar el intérprete basándose únicamente en ella.**
+
 Esta tabla documenta los 256 opcodes del procesador 65C816 y sirve como única fuente de verdad para la emulación ciclo a ciclo.
 
 ## Modificadores de Ciclo (Condiciones)
