@@ -61,5 +61,5 @@ Ver `docs/SPEC.md` §7 para las fases completas.
 
 ### Registro de Deuda Técnica (Fase 1)
 
-- **DT-002 (Licencia de documentación):** `.reuse/dep5` asigna `CC-BY-4.0` a `docs/adr/*.md`, pero los ADR usan `GPL-3.0-or-later`. Se debe alinear la política de licencias de documentación.
-- **DT-003 (SPEC sin SPDX):** `docs/SPEC.md` no tiene cabecera SPDX ni cobertura en `dep5`.
+- **DT-002 (Licencia de documentación):** [RESUELTO] `.reuse/dep5` asigna ahora `GPL-3.0-or-later` a `docs/adr/*.md`, coherente con las cabeceras de los ADR; `docs/refs/*.md` se mantiene en `CC-BY-4.0`.
+- **DT-003 (SPEC sin SPDX):** [RESUELTO] `docs/SPEC.md` tiene ahora cabecera SPDX `GPL-3.0-or-later`.
