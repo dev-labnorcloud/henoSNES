@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 henoSNES contributors -->
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+
 # SPEC — Emulador SNES Open Source Multiplataforma
 
 Oct 2, 2026 · @Arquitecto CRM

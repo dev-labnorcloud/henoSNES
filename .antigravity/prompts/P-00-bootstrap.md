@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 henoSNES contributors -->
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+
 # P-00 · Bootstrap de henoSNES
 
 **Modelo:** Claude Opus 4.6 (Thinking) · **Modo:** Planning · **Workspace:** carpeta `henosnes/` con `AGENTS.md` y `docs/SPEC.md` ya presentes.

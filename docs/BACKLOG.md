@@ -10,21 +10,21 @@ Ver `docs/SPEC.md` §7 para las fases completas.
 
 | ID      | Descripción                                                              | Gate                                                    | Estado    |
 |---------|---------------------------------------------------------------------------|---------------------------------------------------------|-----------|
-| P0-001  | Estructura de carpetas y READMEs                                        | Directorios creados con README.md                       | EN CURSO  |
-| P0-002  | CMakeLists.txt raíz + CMakePresets.json multiplataforma                 | Configura en Windows, Linux y macOS                     | EN CURSO  |
-| P0-003  | vcpkg.json modo manifest con dependencias                               | vcpkg install exitoso en 3 SO                           | EN CURSO  |
-| P0-004  | `core/api/heno.h` — API C con funciones declaradas (stubs)              | Compila sin errores                                     | EN CURSO  |
-| P0-005  | Tests de ABI (Catch2) para heno.h                                       | Tests de sizeof y enum values pasan                     | EN CURSO  |
-| P0-006  | `tools/heno-cli/main.cpp` — imprime versión y hash de commit            | `heno-cli --version` funciona                           | EN CURSO  |
-| P0-007  | GitHub Actions CI: build + test en Windows, Linux, macOS (x64 + arm64)  | CI verde en los 4 jobs                                  | EN CURSO  |
-| P0-008  | Archivos de gobierno: LICENSE, LEGAL.md, CONTRIBUTING.md, SECURITY.md   | Archivos presentes y completos                          | EN CURSO  |
-| P0-009  | THIRD_PARTY_NOTICES.md con plantilla                                    | Plantilla de entrada documentada                        | EN CURSO  |
-| P0-010  | .clang-format y .clang-tidy configurados                                | clang-format no modifica archivos existentes            | EN CURSO  |
-| P0-011  | Configuración REUSE 3.0 (.reuse/dep5 + cabeceras SPDX)                 | Todos los archivos tienen identificador de licencia     | EN CURSO  |
-| P0-012  | ADR-0001: Licencia y alcance legal                                      | ADR en formato MADR                                     | EN CURSO  |
-| P0-013  | ADR-0002: Arquitectura por capas                                        | ADR en formato MADR                                     | EN CURSO  |
-| P0-014  | ADR-0003: Contrato de la API C                                          | ADR en formato MADR                                     | EN CURSO  |
-| P0-015  | docs/BACKLOG.md con tareas de fases 0 y 1                               | Backlog documentado                                     | EN CURSO  |
+| P0-001  | Estructura de carpetas y READMEs                                        | Directorios creados con README.md                       | RESUELTO  |
+| P0-002  | CMakeLists.txt raíz + CMakePresets.json multiplataforma                 | Configura en Windows, Linux y macOS                     | RESUELTO  |
+| P0-003  | vcpkg.json modo manifest con dependencias                               | vcpkg install exitoso en 3 SO                           | RESUELTO  |
+| P0-004  | `core/api/heno.h` — API C con funciones declaradas (stubs)              | Compila sin errores                                     | RESUELTO  |
+| P0-005  | Tests de ABI (Catch2) para heno.h                                       | Tests de sizeof y enum values pasan                     | RESUELTO  |
+| P0-006  | `tools/heno-cli/main.cpp` — imprime versión y hash de commit            | `heno-cli --version` funciona                           | RESUELTO  |
+| P0-007  | GitHub Actions CI: build + test en Windows, Linux, macOS (x64 + arm64)  | CI verde en los 4 jobs                                  | RESUELTO  |
+| P0-008  | Archivos de gobierno: LICENSE, LEGAL.md, CONTRIBUTING.md, SECURITY.md   | Archivos presentes y completos                          | RESUELTO  |
+| P0-009  | THIRD_PARTY_NOTICES.md con plantilla                                    | Plantilla de entrada documentada                        | RESUELTO  |
+| P0-010  | .clang-format y .clang-tidy configurados                                | clang-format no modifica archivos existentes            | RESUELTO  |
+| P0-011  | Configuración REUSE 3.0 (.reuse/dep5 + cabeceras SPDX)                 | Todos los archivos tienen identificador de licencia     | RESUELTO  |
+| P0-012  | ADR-0001: Licencia y alcance legal                                      | ADR en formato MADR                                     | RESUELTO  |
+| P0-013  | ADR-0002: Arquitectura por capas                                        | ADR en formato MADR                                     | RESUELTO  |
+| P0-014  | ADR-0003: Contrato de la API C                                          | ADR en formato MADR                                     | RESUELTO  |
+| P0-015  | docs/BACKLOG.md con tareas de fases 0 y 1                               | Backlog documentado                                     | RESUELTO  |
 | P0-016  | Deuda técnica: CI runner macOS x64 Intel (`macos-13`)                  | Aislado en workflow manual (.github/workflows/ci-macos-x64.yml) | RESUELTO  |
 
 ### Registro de Deuda Técnica (Fase 0)
@@ -57,8 +57,9 @@ Ver `docs/SPEC.md` §7 para las fases completas.
 | P1-019  | Golden frames — 20 ROMs homebrew libres × 300 frames                    | Hashes SHA-256 estables                                 | TODO   |
 | P1-020  | ADR-0005: Estrategia de scheduler cooperativo (+ revisión de ADR-0004, Gate A) | ADR en formato MADR                                     | RESUELTO |
 | P1-021  | ADR: formato binario de serialización versionado (pendiente declarado en ADR-0005) | ADR en formato MADR                                     | TODO   |
+| P1-022  | Selección de ROMs de prueba: test ROMs de CPU y SPC700 de la comunidad y 20 homebrew libres, con licencia verificada y registradas en tests/roms/MANIFEST.json (requisito de P1-017, P1-018 y P1-019) | Manifest con entradas y licencias verificadas           | TODO   |
 
 ### Registro de Deuda Técnica (Fase 1)
 
-- **DT-002 (Licencia de documentación):** `.reuse/dep5` asigna `CC-BY-4.0` a `docs/adr/*.md`, pero los ADR usan `GPL-3.0-or-later`. Se debe alinear la política de licencias de documentación.
-- **DT-003 (SPEC sin SPDX):** `docs/SPEC.md` no tiene cabecera SPDX ni cobertura en `dep5`.
+- **DT-002 (Licencia de documentación):** [RESUELTO] `.reuse/dep5` asigna ahora `GPL-3.0-or-later` a `docs/adr/*.md`, coherente con las cabeceras de los ADR; `docs/refs/*.md` se mantiene en `CC-BY-4.0`.
+- **DT-003 (SPEC sin SPDX):** [RESUELTO] `docs/SPEC.md` tiene ahora cabecera SPDX `GPL-3.0-or-later`.
