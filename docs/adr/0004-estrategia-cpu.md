@@ -15,7 +15,7 @@ Propuesto
 
 El núcleo de la CPU 65C816 requiere una implementación estricta, ciclo a ciclo. Dado que su conjunto es complejo (256 opcodes, más modos dinámicos según el estado de los flags M/X de 8/16 bits), la forma de despachar (dispatching) la ejecución de la CPU afecta directamente:
 1. **Precisión de ciclos**: Necesaria para la emulación correcta y pase estricto de las suites de prueba.
-2. **Determinismo y Serialización**: La ejecución debe ser pausada y volcada a disco bit a bit de forma serializable (esencial para run-ahead y rollback netplay).
+2. **Determinismo y Serialización**: La ejecución debe ser pausada y volcada a disco en un formato binario versionado con migraciones (esencial para run-ahead y rollback netplay).
 3. **Rendimiento**: En el modelo ciclo a ciclo, la sobrecarga del despacho debe ser lo más cercana a cero posible.
 4. **Legibilidad**: Facilidad para revisar, depurar e integrar nuevos contribuidores.
 
