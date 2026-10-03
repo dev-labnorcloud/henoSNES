@@ -5,7 +5,7 @@ name: CI
 
 on:
   push:
-    branches: [main, 'feat/**']
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -44,18 +44,6 @@ jobs:
             cache-tool: ccache
             artifact-name: heno-cli-macos-arm64
             artifact-path: build/macos-arm64-release/tools/heno-cli/heno-cli
-
-          # TODO: Review runner availability — macos-13 is the last Intel
-          # macOS runner as of Oct 2026. Replace with macos-15-intel if/when
-          # GitHub makes it available. Review date: 2027-01-01
-          - os: macos-13
-            preset: macos-x64
-            configure-preset: macos-x64-release
-            build-preset: macos-x64-release
-            test-preset: macos-x64-release
-            cache-tool: ccache
-            artifact-name: heno-cli-macos-x64
-            artifact-path: build/macos-x64-release/tools/heno-cli/heno-cli
 
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} (${{ matrix.preset }})
@@ -98,6 +86,10 @@ jobs:
 
       - name: Install Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Setup MSVC environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure (CMake)
         run: >
