@@ -13,6 +13,7 @@ Propuesto
 
 ## Historial de revisión
 
+- **2026-10-03 (E5)**: Correcciones de revisión cruzada. Licencia mantenida en GPL-3.0-or-later por decisión humana. Ajuste de WAI, STP y MVN/MVP.
 - **2026-10-03 (E3)**: Revisión y alineación completa con ADR-0005 (Scheduler Cooperativo). Ajuste de granularidad, modos de ejecución, perfiles y serialización.
 
 ## Contexto
@@ -28,7 +29,7 @@ El núcleo de la CPU 65C816 requiere una implementación estricta, ciclo a ciclo
 
 Se adopta la estrategia de **Tabla de Plantillas C++20 (Templates array)** para la CPU, alineada orgánicamente con la CPU maestra secuencial descrita en el ADR-0005.
 
-El compilador de C++ se encarga de construir, en tiempo de compilación, las tablas de punteros a función de las instrucciones, resolviendo de antemano el código repetitivo de lectura de operandos, ejecución y escritura. Cada "handler" de instrucción emite sus propios `bus.read()`, `bus.write()` y `bus.idle()`, y el control avanza de forma determinista y secuencial.
+El compilador de C++ se encarga de construir, en tiempo de compilación, las tablas de punteros a función de las instrucciones, resolviendo de antemano el código repetitivo de lectura de operandos, ejecución y escritura. Cada "handler" de instrucción emite sus propios `Bus::read8()`, `Bus::write8()` y `Bus::idle()`, y el control avanza de forma determinista y secuencial.
 
 ### 1. Granularidad
 
@@ -57,17 +58,17 @@ Las tablas de handlers se instanciarán una vez por perfil. El código interno d
 
 ### 4. Serialización del Estado
 
-En cumplimiento con el ADR-0005 (§3 y §6), el estado de la CPU se encapsula completamente en un `struct State` trivialmente copiable. La serialización de este estado (o su captura para clonación en run-ahead) ocurre **exclusivamente en límites de instrucción**, y justo después de forzar la sincronización de todos los componentes subordinados mediante `sync_all()`.
+En cumplimiento con el ADR-0005 (§3 y §6), el estado de la CPU se encapsula completamente en un `struct State` trivialmente copiable. La serialización de este estado (o su captura para clonación en run-ahead) ocurre **exclusivamente en el primer límite de instrucción tras el inicio de V-blank**, y justo después de forzar la sincronización de todos los componentes subordinados mediante `sync_all()`.
 
 El puntero a la tabla activa (`active_table`) **no se serializa**. Es una caché derivada de los flags P y E almacenados en el `State`, y se recalcula al finalizar la carga de un savestate (regla 5 de ADR-0005: cachés recalculables no se serializan).
 
 ### 5. Interrupciones y Casos Especiales
 
 - **NMI e IRQ**: Se reconocen y atienden en el límite de instrucción. El instante exacto de muestreo dentro del último ciclo de la instrucción previa queda como detalle de implementación a validar [verificar: docs/refs/65c816-quirks.md, fullsnes].
-- **Fuentes de Interrupción**: Las interrupciones hardware (NMI por V-blank, IRQ por temporizadores H/V) se evalúan a partir del `master_cycle` global (ADR-0005, "Detección de eventos"). Esto garantiza que el timing de interrupciones sea independiente del catch-up de la PPU y, por tanto, idéntico entre los perfiles `accuracy` y `performance`.
+- **Fuentes de Interrupción**: Las interrupciones hardware (NMI por V-blank, IRQ por temporizadores H/V) se evalúan a partir de los contadores H/V del `State` de la CPU, que avanzan con `master_cycle` (ADR-0005, Detección de eventos). Esto garantiza que el timing de interrupciones sea independiente del catch-up de la PPU y, por tanto, idéntico entre los perfiles `accuracy` y `performance`.
 - **BRK y COP**: Se implementan como entradas normales en las tablas de handlers, no como excepciones de hardware.
-- **WAI (Wait for Interrupt)**: Detiene el fetch de instrucciones mediante un bucle de `Bus::idle()` que continúa consumiendo ciclos hasta que la línea NMI o IRQ se active.
-- **STP (Stop the Clock)**: Detiene la CPU indefinidamente mediante un bucle de `Bus::idle()` hasta que ocurra un reset por hardware.
+- **WAI (Wait for Interrupt)**: Se modela como un flag `waiting` en el `State` de la CPU. Mientras el flag esté activo, el bucle principal ejecuta un `Bus::idle()` por iteración y cada iteración es un límite de instrucción (punto seguro). Despierta con NMI o IRQ; si I=1, la IRQ lo despierta pero no se atiende y la ejecución continúa con la siguiente instrucción [verificar].
+- **STP (Stop the Clock)**: Se modela como un flag `stopped` en el `State` de la CPU. Mientras esté activo, el bucle ejecuta un `Bus::idle()` por iteración como límite de instrucción seguro. Solo sale con un reset por hardware.
 - **XCE (Exchange Carry and Emulation)**: Al entrar en modo emulación (E=1), la CPU fuerza dinámicamente M=X=1, limpia los bytes altos de los registros X e Y, fija el byte alto de SP en `$01` y recalcula la tabla activa [verificar el hardware real].
 
 ## Alternativas consideradas
@@ -91,7 +92,7 @@ El puntero a la tabla activa (`active_table`) **no se serializa**. Es una caché
 
 ## Criterios de Validación
 
-1. **Rendimiento (Línea Base)**: Microbenchmark del intérprete corriendo con un `Bus` nulo (instrucciones por segundo). Se registrará como línea base (Clang 17, -O2, media de 50 ejecuciones). El criterio de éxito es que no ocurran regresiones mayores al 5 % entre Pull Requests.
+1. **Rendimiento (Línea Base)**: Microbenchmark del intérprete corriendo con un `Bus` nulo (instrucciones por segundo). Se registrará como línea base (Clang 17, -O2, media de 50 ejecuciones). El criterio de éxito es que no ocurran caídas de rendimiento mayores al 5 % monitorizadas mediante una alerta nocturna en CI (alineado con SPEC §9).
 2. **Corrección de Opcodes**: Pruebas unitarias por opcode derivadas lógicamente de `docs/refs/65c816-opcodes.md`. P1-001 (Implementación CPU) tiene una dependencia estricta con P1-000 (verificación cruzada de la tabla).
 3. **Pase de Suites de Prueba**: Debe pasar las ROMs de prueba referenciadas en P1-017 (CPU Test ROMs).
 4. **Suites Comunitarias Adicionales**: Se incorporarán suites de prueba comunitarias instrucción por instrucción **solo si** su licencia está explícitamente verificada como compatible con GPLv3 [verificar licencia].

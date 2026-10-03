@@ -11,6 +11,10 @@ Propuesto
 
 2026-10-03
 
+## Historial de revisión
+
+- **2026-10-03 (E5)**: Correcciones de revisión cruzada. Puntos de captura únicos en V-blank, WAI/STP como puntos seguros, revisión de frecuencias, DMA/HDMA y clarificación del perfil performance.
+
 ## Contexto
 
 La SNES contiene múltiples procesadores concurrentes — CPU (65C816), PPU (S-PPU1/S-PPU2),
@@ -33,7 +37,7 @@ conjunta:
 Además, `AGENTS.md` impone que `core/` no use excepciones C++ y que todo acceso a memoria
 emulada pase por el bus con trazabilidad para el depurador.
 
-Existe un spike exploratorio en la rama `feat/P1-bus-sched` (no mergeada) que implementa
+Existe un spike exploratorio en la rama de archivo `spike/P1-bus-sched` (antes `feat/P1-bus-sched`, no mergeada) que implementa
 una variante de catch-up con `Bus` llamando a `Scheduler::advance()`. Se evalúa aquí como
 una de las alternativas.
 
@@ -42,10 +46,9 @@ una de las alternativas.
 - **Coprocesadores que acceden al bus como maestros** (p. ej. SA-1, Fase 2): requieren que
   más de un componente emita accesos al bus y, por tanto, otro modelo de maestro/subordinado.
   Se resolverán en un **ADR propio futuro**. Este ADR solo cubre **coprocesadores
-  pasivos**: aquellos que no inician accesos al bus principal de la CPU (p. ej., DSP-1,
-  DSP-2), distinguiéndose de los coprocesadores activos (SA-1, SuperFX) que actúan como
-  maestros y quedan fuera de alcance.
-- El formato binario del savestate (ADR de serialización asociado a P1-015).
+  pasivos**: aquellos que solo progresan observablemente cuando la CPU accede a sus puertos [verificar] (p. ej., DSP-1,
+  DSP-2), distinguiéndose de los coprocesadores activos (SA-1, SuperFX) que emplean el bus de la CPU o del cartucho mediante arbitraje y quedan fuera de alcance.
+- El formato binario del savestate (ADR de serialización asociado a P1-021).
 
 ## Decisión
 
@@ -74,18 +77,20 @@ cuando la fuente primaria lo permita, para evitar acumulación de error por redo
 
 | Componente | Divisor | Ciclos maestros por ciclo de componente | Fuente |
 |-----------|---------|----------------------------------------|--------|
-| CPU (acceso lento, SlowROM) | ÷8 | 8 | [verificar: fullsnes, `docs/refs/65c816-bus.md`] |
+| CPU (acceso normal, WRAM, ROM lenta) | ÷8 | 8 | [verificar: fullsnes, `docs/refs/65c816-bus.md`] |
 | CPU (acceso rápido, FastROM) | ÷6 | 6 | [verificar: fullsnes] |
 | CPU (ciclos internos) | ÷6 | 6 | [verificar: fullsnes] |
-| CPU (registros I/O lentos) | ÷12 | 12 | [verificar: fullsnes] |
+| CPU (registros I/O lentos, $4000-$41FF) | ÷12 | 12 | [verificar: fullsnes] |
 | PPU | ÷4 (dot clock) | 4 | [verificar: fullsnes §PPU Timing] |
-| APU (SPC700 + S-DSP) | Cristal independiente | ≈ 24 576 000 Hz (nominal) | [verificar: fullsnes §APU Timing; SNES dev wiki] |
+| APU (SPC700 + S-DSP) | Resonador cerámico | 24 606 720 Hz (constante canónica) | [verificar: fullsnes §APU Timing; varía por consola] |
 
-> **Dominio de reloj de la APU.** La APU tiene su propio cristal de cuarzo
-> (≈ 24,576 MHz [verificar]), independiente del cristal principal. La sincronización
+> **Dominio de reloj de la APU.** La APU tiene su propio resonador cerámico
+> (frecuencia que varía entre consolas [verificar]), independiente del cristal principal.
+> Para mantener coherencia con la salida PCM de 32 040 Hz fijada en la SPEC, se adopta
+> la constante canónica de 24 606 720 Hz (= 32 040 Hz × 768) [verificar]. La sincronización
 > CPU↔APU ocurre a través de los 4 puertos I/O (`$2140–$2143`) y no comparte un divisor
 > entero exacto con el reloj maestro. El scheduler mantiene un contador separado para la
-> APU y convierte entre dominios con **aritmética entera exclusivamente** (sin `float`),
+> APU (`apu_cycle`, que cuenta ticks del oscilador; el SPC700 avanza cada 24 ticks [verificar]) y convierte entre dominios con **aritmética entera exclusivamente** (sin `float`),
 > mediante un acumulador racional:
 >
 > ```text
@@ -96,10 +101,13 @@ cuando la fuente primaria lo permita, para evitar acumulación de error por redo
 >     apu_acc    = apu_acc % D
 > ```
 >
-> Con los valores nominales NTSC (24 576 000 Hz y 315/88 × 6 MHz) la fracción reducida es
-> N/D = 45 056 / 39 375 [verificar: depende de las frecuencias verificadas arriba]. El
+> Usando la constante adoptada de 24 606 720 Hz y la frecuencia NTSC de 236 250 000 / 11 Hz:
+> `(24 606 720 × 11) / 236 250 000 = 270 673 920 / 236 250 000`. Dividiendo por el MCD (2 160),
+> la fracción reducida es N/D = 125 312 / 109 375. El
 > resto `apu_acc` forma parte del estado serializado, de modo que la conversión es exacta y
 > determinista a largo plazo. La razón PAL se deriva igual una vez verificada su frecuencia.
+
+**Refresco de DRAM:** Aproximadamente cada scanline, el refresco de memoria detiene a la CPU durante unos 40 ciclos maestros [verificar]. Esto afecta al timing general en ambos perfiles.
 
 ### 2. Mecanismo de sincronización
 
@@ -116,7 +124,7 @@ libco].
 - ❌ **Serialización frágil**: el estado suspendido incluye la pila del SO (registros de
   máquina, instruction pointer, stack frames), que no es portable entre plataformas,
   compiladores ni versiones del compilador. bsnes resuelve esto sincronizando solo en
-  puntos seguros y recorriendo el estado hasta alcanzarlos, lo que complica
+  puntos seguros y recorriendo el estado hasta alcanzarlos (afirmación pendiente de validación [verificar]), lo que complica
   significativamente la serialización.
 - ❌ **Dependencia nueva**: `libco` es código ensamblador por plataforma (x86_64, ARM64,
   Win64 SEH). Según `AGENTS.md`, toda dependencia nueva requiere ADR aprobado por un
@@ -161,11 +169,15 @@ poder detenerse y reanudarse en un ciclo objetivo arbitrario; su progreso vive e
 - ⚠️ Como la CPU solo se serializa en límites de instrucción, todo lo que ocurra a mitad
   de instrucción (HDMA, ver §3) debe completarse dentro de la instrucción en curso.
 
-**(d) Sincronización lazy por scanline (ELEGIDA para `performance`)**
+**(d) Sincronización lazy (ELEGIDA para `performance`)**
 
-Variante de (c) donde PPU y APU no se sincronizan en cada ciclo de CPU sino al final de
-cada scanline (o cada N scanlines). La PPU renderiza un scanline completo de una vez; la
-APU procesa el equivalente temporal de un scanline.
+Variante de (c) donde PPU y APU no se sincronizan en cada ciclo de CPU.
+En Fase 1, se mantiene una sola PPU capaz de detenerse en cualquier ciclo; el perfil `performance` solo cambia la granularidad del catch-up manteniendo exactamente el mismo `State`. La implementación de un renderer de PPU por scanline completo se pospone para un ADR futuro con la restricción de que deberá mantener compatibilidad de `State`.
+
+Los puntos de sincronización obligatoria de este perfil son:
+- Fin de cada scanline.
+- El punto único de captura (primer límite de instrucción tras inicio de V-blank, ver §3).
+- Toda lectura o escritura a registros de la PPU (`$2100-$213F`) y puertos de la APU (`$2140-$2143`).
 
 - ✅ **Mucho menos overhead**: órdenes de magnitud menos puntos de sincronización.
 - ✅ Misma infraestructura que (c), mismo `State`, misma serialización y run-ahead.
@@ -191,7 +203,7 @@ class Scheduler { /* ... */ };
 > **Compatibilidad de savestates entre perfiles** (SPEC §4, decisión 1): los savestates
 > deben ser compatibles entre `accuracy` y `performance`. Esto se garantiza porque ambos
 > perfiles serializan exactamente los mismos `State`, los savestates se capturan siempre
-> en un **límite de instrucción** y, antes de capturar, se fuerza el catch-up de todos los
+> en el punto único de captura de V-blank y, antes de capturar, se fuerza el catch-up de todos los
 > subordinados hasta `master_cycle` en ambos perfiles (ver §3). La política de
 > sincronización solo afecta *cuándo* se invoca catch-up durante la ejecución, no *qué*
 > estado se serializa ni en qué punto temporal queda cada componente al serializar.
@@ -211,8 +223,7 @@ public:
 };
 ```
 
-Todas las llamadas a `advance()` se realizan desde el `Bus` (`read8()`, `write8()` e
-`idle()`); la CPU y el controlador DMA nunca llaman al scheduler directamente.
+Todas las llamadas a `advance()` se realizan desde el `Bus` (`read8()`, `write8()`, `idle()` y la vía dedicada de DMA); la CPU y el controlador DMA nunca llaman al scheduler directamente.
 
 #### Perfil `accuracy`
 
@@ -235,33 +246,24 @@ Todas las llamadas a `advance()` se realizan desde el `Bus` (`read8()`, `write8(
 
 - Misma estructura y misma firma, pero `advance()` solo acumula ciclos sin invocar
   catch-up en cada llamada. Los subordinados se sincronizan al cruzar el final de cada
-  scanline, cuando se accede a un recurso compartido (puertos APU, registros PPU visibles
-  para la CPU) y en los puntos de sincronización forzada (ver abajo).
+  scanline, cuando se accede a un recurso compartido (ver lista exhaustiva de puntos de sincronización en §2 (d)) y en los puntos de sincronización forzada (ver abajo).
 
 #### DMA y HDMA
 
 El controlador DMA forma parte del S-CPU y actúa en el lado maestro; no es un subordinado.
-Sus accesos pasan por `Bus::read8()` / `Bus::write8()` y, por tanto, llaman a `advance()`
-como cualquier ciclo de CPU (coste por byte [verificar: fullsnes §DMA, 8 ciclos maestros]).
+Para sus transferencias, el `Bus` expone una vía de acceso DMA dedicada que cobra 8 ciclos maestros por byte una sola vez (lectura en un bus y escritura en el otro simultáneamente), ignorando el coste normal por región de memoria [verificar].
 
 - **DMA general**: se dispara al escribir en `$420B` (MDMAEN). La transferencia se ejecuta
   dentro del ciclo de bus siguiente a esa escritura, detenido el flujo de la CPU, y la
   CPU continúa al terminar [verificar: punto exacto de arranque y ciclos de overhead].
 - **HDMA**: se ejecuta al comienzo de cada H-blank (y su inicialización al comienzo del
-  frame) y **detiene a la CPU a mitad de instrucción**. Para evitar reentrancia (ya que
-  HDMA emite lecturas/escrituras al bus que llamarían a `advance()`), `advance()` **solo
-  detecta y marca HDMA como pendiente**. La CPU, en su ruta de ciclos común (antes de
-  efectuar el siguiente `read8()`, `write8()` o `idle()`), comprueba este flag y
-  ejecuta la transferencia HDMA como una llamada anidada dentro del handler en curso,
+  frame) y **detiene a la CPU a mitad de instrucción**. El HDMA tiene prioridad sobre el DMA general en curso, por lo que el flag de HDMA pendiente se comprueba tanto en la ruta de ciclos común de la CPU como dentro del bucle del DMA general [verificar: fullsnes]. La CPU evalúa los contadores H/V y levanta este flag sin intervención del scheduler. Luego, ejecuta la transferencia HDMA como una llamada anidada dentro del handler en curso,
   fuera del contexto de `advance()`. Como la CPU es código secuencial, el handler
   simplemente está más arriba en la pila mientras el HDMA corre, y termina antes del
   siguiente límite de instrucción. `advance()` nunca invoca, directa ni indirectamente,
   otro `advance()`.
 
-**Detección de eventos:** la evaluación de cuándo debe dispararse HDMA, NMI o IRQ se
-calcula puramente a partir de `master_cycle` (que el S-CPU traduce a contadores de
-posición H/V de la pantalla). Esta detección **no depende del estado ni del catch-up
-de la PPU**. Como `master_cycle` avanza de la misma manera en ambos perfiles, el timing
+**Detección de eventos:** Los contadores de posición H/V, los latches de NMI/IRQ y el flag de HDMA pendiente pertenecen al `State` de la CPU (como parte del bloque S-CPU). Se actualizan directamente en la ruta de ciclos de la CPU añadiendo los mismos ciclos que se envían al Bus. El Scheduler no detecta eventos ni conoce la CPU. La evaluación se calcula a partir de contadores H/V que avanzan con `master_cycle`, teniendo en cuenta la existencia de líneas cortas y largas y el bit de interlace [verificar]. Esta detección **no depende del estado ni del catch-up de la PPU**. Como `master_cycle` avanza de la misma manera en ambos perfiles, el timing
 de interrupciones y DMA/HDMA es idéntico tanto en `accuracy` como en `performance`.
 
 #### Instrucciones MVN/MVP (transferencia de bloques)
@@ -271,7 +273,7 @@ CPU por byte** (no ciclos maestros; el coste en ciclos maestros depende de la ve
 cada acceso) [verificar: `docs/refs/65c816-quirks.md`, fullsnes].
 
 **Decisión:** cada byte transferido es una ejecución completa de la instrucción y
-**termina en un límite de instrucción**. Tras mover un byte y decrementar A, si A ≠
+**termina en un límite de instrucción**. Tras mover un byte y decrementar C (16 bits, sea cual sea el estado de M), si C ≠
 `$FFFF`, el PC se deja apuntando al opcode MVN/MVP, de modo que la siguiente instrucción
 re-decodifica MVN/MVP y continúa la transferencia usando A, X, Y como contadores/punteros
 vivos. Las interrupciones (NMI/IRQ) se atienden en ese límite como en cualquier otra
@@ -283,23 +285,21 @@ equivalencia con la implementación de bsnes se marca [verificar].
 
 #### Puntos seguros de guardado (savestates) y clonación
 
-Los savestates se capturan, y los clones de run-ahead se crean, siempre en un **límite de
-instrucción**: después de que `step()` completa una instrucción y antes de ejecutar la
-siguiente.
+Para garantizar el determinismo, los puntos de sincronización de cada perfil son siempre los mismos, haya o no una captura en curso. Toda captura (savestate, clon de run-ahead, rebobinado, rollback netplay) se toma única y exclusivamente en el **primer límite de instrucción tras el inicio de V-blank**.
 
-**Regla de sincronización forzada:** antes de capturar un savestate o clonar el estado
-para run-ahead se invoca `scheduler.sync_all()`, que fuerza el catch-up de **todos** los
-subordinados hasta `master_cycle`, **en ambos perfiles**. En ese punto:
+En ese punto, **ambos perfiles ejecutan obligatoriamente `sync_all()`** en todos los frames, forzando el catch-up de todos los subordinados, se requiera o no una captura. En `accuracy`, este `sync_all()` es efectivamente un no-op porque los subordinados ya están al día, pero en `performance` asegura la consistencia de los datos. Si el usuario solicita un savestate en otro momento, la petición se difiere internamente hasta alcanzar este punto de V-blank.
 
-- El PC apunta a la siguiente instrucción (o al opcode MVN/MVP en curso).
+Las instrucciones WAI y STP se modelan como flags en el `State` de la CPU; cada iteración de su bucle de espera consume ciclos (`Bus::idle()`) y cuenta como un límite de instrucción válido (punto seguro) que puede coincidir con el inicio de V-blank.
+
+En este punto seguro garantizado:
+
+- El PC apunta a la siguiente instrucción (o al opcode MVN/MVP, WAI, STP en curso).
 - Todos los registros de la CPU están en un estado definido.
 - No hay estado "a mitad de decodificación" ni "a mitad de ejecución" (ni HDMA en curso).
-- Todos los subordinados están exactamente en `master_cycle`; no quedan ciclos acumulados
-  pendientes de notificar, por lo que el estado capturado es idéntico en contenido entre
-  perfiles.
+- Todos los subordinados están exactamente en `master_cycle`.
 
 El formato binario completo del savestate queda fuera de alcance de este ADR y se definirá
-en un **ADR de serialización pendiente** (asociado a P1-015).
+en un **ADR de serialización pendiente** (asociado a P1-021).
 
 ### 4. Dirección de dependencias entre CPU, Bus, Scheduler y Serializer
 
@@ -364,7 +364,7 @@ necesarios:
   notificar a los subordinados durante llamadas reentrantes, ocultando un error de diseño.
   La implementación final elimina ese camino: una llamada reentrante a `advance()` es una
   violación de invariante y dispara `assert()`.
-- **Despacho virtual**: si el spike invoca a PPU/APU a través de una interfaz virtual, la
+- **Despacho virtual**: el spike invoca a PPU/APU a través de una interfaz virtual (`ISchedulable::catch_up` virtual); la
   implementación final los compone estáticamente (regla 4).
 - **Ciclos internos**: la implementación final añade `Bus::idle()` para que los ciclos
   internos de la CPU también llamen a `advance()`.
@@ -413,12 +413,11 @@ public:
 **Hipótesis de rendimiento** (sin evidencia medida todavía):
 
 - El perfil `performance` debería ejecutar significativamente menos llamadas a `catch_up()`
-  por frame (≈340 por frame en scanline vs. ≈100 000+ en `accuracy`). Esto debería
+  por frame (≈262 (NTSC) / 312 (PAL) scanlines por frame vs. ≈357 000 ciclos maestros por frame ÷ 6-8 por ciclo de CPU en `accuracy` [medir]). Esto debería
   reducir el overhead del scheduler de forma medible.
 - **Criterio de aceptación**: benchmark de 600 frames (10 segundos de emulación) en
   `heno-cli` headless con una ROM homebrew de referencia. El perfil `performance` debe ser
-  al menos un 30 % más rápido que `accuracy` en instrucciones emuladas por segundo (media
-  de 50 ejecuciones, Clang 17 -O2, misma máquina).
+  al menos un 30 % más rápido que `accuracy` midiendo el tiempo total para completar los 600 frames (media de 50 ejecuciones, Clang 17 -O2, misma máquina).
 
 ### 6. Serialización del estado del scheduler
 
@@ -432,15 +431,23 @@ El estado del scheduler es su propio `struct State` trivialmente copiable:
 | `apu_cycle` | `uint64_t` | Contador del dominio de reloj de la APU |
 | `apu_acc` | `uint64_t` | Resto del acumulador racional maestro→APU (ver §1) |
 
+Adicionalmente, el `State` de la CPU (S-CPU) es propietario de variables de tiempo que no gestiona el Scheduler:
+
+| Campo CPU | Tipo | Descripción |
+|-----------|------|-------------|
+| `h_counter` / `v_counter` | `uint16_t` | Posición del haz de la pantalla, avanza con la CPU |
+| `nmi_latch` / `irq_latch` | `bool` | Estado de las líneas de interrupción |
+| `hdma_pending` | `bool` | Flag para ejecución de HDMA en el H-blank actual |
+| `waiting` / `stopped` | `bool` | Flags para el estado de las instrucciones WAI y STP |
+
 Cada componente subordinado serializa su propio `State` (registros, VRAM, buffers de
 audio, etc.) con el `Serializer`. El scheduler serializa solo su `State`. No se serializan
-ciclos acumulados pendientes de notificar: `sync_all()` los deja en cero antes de
-capturar.
+ciclos acumulados pendientes de notificar: `sync_all()` los deja en cero al capturar en V-blank.
 
 #### Puntos seguros vs. estado intermedio
 
-Este ADR prescribe que la serialización ocurre siempre en **límites de instrucción** y
-después de `sync_all()` (ver §3), en ambos perfiles. En estos puntos no existe estado
+Este ADR prescribe que la serialización ocurre **exclusivamente en el primer límite de instrucción tras el inicio de V-blank**
+y después de `sync_all()` (ver §3), en ambos perfiles. En este punto no existe estado
 intermedio de la CPU (todos los registros son válidos y el PC apunta a la siguiente
 instrucción) ni de los subordinados (todos en `master_cycle`).
 
@@ -450,17 +457,16 @@ ordinario.
 
 #### Impacto en funciones avanzadas
 
-- **Run-ahead** (SPEC F-06): se ejecuta `sync_all()`, se clona el estado completo (copia
-  de los `State` de todos los componentes, incluido el del scheduler), se ejecutan N
-  frames extra y se descarta el clon. Viable porque cada `State` es trivialmente
-  copiable.
+- **Run-ahead** (SPEC F-06): en el punto de V-blank se clona el estado completo (copia
+  de los `State` de todos los componentes). *Nota: duplicar el estado completo difiere de la decisión 2 de la SPEC §4, pero se justifica y adopta porque el tamaño estimado del estado es pequeño (~300 KB [medir]) y cada `State` es trivialmente copiable, evitando la complejidad de una serialización parcial.* Se ejecutan N
+  frames extra y se descarta el clon. Durante la simulación de frames de run-ahead, el hook de trazabilidad del depurador se suprime.
 - **Rebobinado** (SPEC F-07): se almacenan savestates comprimidos periódicamente en un
   buffer circular. Al rebobinar, se restaura el savestate más cercano.
 - **Netplay rollback** (SPEC F-12): cada frame se serializa el estado mínimo necesario para
-  rollback. El formato compacto se definirá en el ADR de serialización (P1-015).
+  rollback. El formato compacto se definirá en el ADR de serialización (P1-021).
 
 El formato binario versionado con migraciones queda fuera de alcance de este ADR. Se
-declarará en un ADR de serialización asociado a P1-015.
+declarará en un ADR de serialización asociado a P1-021.
 
 ### 7. Determinismo
 
@@ -496,7 +502,7 @@ entre plataformas, compiladores y ejecuciones para la misma entrada:
 | Restricción | Cómo se cumple |
 |-------------|---------------|
 | Sin excepciones C++ en `core/` | `advance()`, `sync_all()` y `catch_up()` retornan `void`. Los invariantes (e.g., ausencia de reentrancia en `advance()`) se verifican con `assert()`. Las operaciones con fallo legítimo (deserialización, carga) usan `std::expected<T, HenoError>`. |
-| Todo acceso a memoria emulada pasa por el bus | La CPU y su controlador DMA nunca leen WRAM ni ROM directamente; siempre invocan `Bus::read8()`/`Bus::write8()` (y `Bus::idle()` para ciclos internos), que llaman al scheduler y al hook del depurador. Los componentes subordinados (PPU, APU) acceden a sus propias memorias internas directamente (VRAM, ARAM) porque no pasan por el bus de la CPU. |
+| Todo acceso a memoria emulada pasa por el bus | La CPU y su controlador DMA nunca leen WRAM ni ROM directamente; siempre invocan `Bus::read8()`/`Bus::write8()` (y `Bus::idle()` para ciclos internos), que llaman al scheduler y al hook del depurador. La PPU accede a VRAM directamente. El SPC700 accede a la ARAM y a sus registros a través del bus propio de la APU, disparando su propio hook de depuración (cumpliendo SPEC F-16). |
 | Sin dependencias nuevas sin ADR | Este ADR no introduce dependencias externas. El scheduler se implementa en C++20 estándar. |
 | `core/` no incluye Qt, SDL, Vulkan ni API de SO | Cumplido: el scheduler usa solo tipos estándar de C++20. |
 
@@ -508,11 +514,10 @@ criterios, verificables por pruebas automatizadas:
 1. **Test de determinismo**: ejecutar 1000 frames de una ROM homebrew dos veces con la
    misma entrada; los hashes SHA-256 de cada frame deben ser idénticos.
 2. **Test de serialización round-trip**: `serialize()` seguido de `deserialize()` en
-   cualquier límite de instrucción produce un estado que genera frames idénticos al
-   estado original (hash match).
+   el punto único de V-blank produce un estado que genera frames idénticos al
+   estado original (hash match). Se validarán savestates mientras la CPU está ejecutando código normal y mientras está en un bucle WAI o STP.
 3. **Test de compatibilidad de savestates entre perfiles**: en ambos sentidos
-   (`accuracy`→`performance` y `performance`→`accuracy`), tras `sync_all()` en un límite
-   de instrucción, el savestate capturado en un perfil se carga en el otro y,
+   (`accuracy`→`performance` y `performance`→`accuracy`), en el punto único de captura (primer límite de instrucción tras el inicio de V-blank), el savestate capturado en un perfil se carga en el otro y,
    re-serializado inmediatamente, produce bytes idénticos (todos los subordinados en
    `master_cycle`, sin ciclos pendientes). El estado cargado produce un frame válido (sin
    crash, sin corrupción visible); los frames subsiguientes pueden diferir por la
@@ -528,6 +533,7 @@ criterios, verificables por pruebas automatizadas:
    `catch_up()` dispara el `assert()` (death test en builds con aserciones activas).
 7. **Benchmark de perfiles**: el criterio de rendimiento del §5 (performance ≥ 30 % más
    rápido que accuracy) se mide y se registra como evidencia.
+8. **Test de run-ahead**: Mismos hashes de frame producidos con el run-ahead activado y desactivado, comprobado en ambos perfiles.
 
 ## Alternativas consideradas
 
@@ -559,18 +565,17 @@ Véase §2 para la evaluación detallada de las cuatro alternativas. Resumen:
 - ⚠️ MVN/MVP como una ejecución por byte añade complejidad al handler de estas
   instrucciones y al test de interrupciones.
 - ⚠️ La composición estática hace que `Scheduler`, `Bus` y CPU se instancien una vez por
-  perfil, incrementando el tamaño del binario (estimación sin medir: < 100 KB
-  adicionales).
+  perfil, incrementando el tamaño del binario [medir el impacto real].
 - ⚠️ Los coprocesadores que acceden al bus (SA-1, Fase 2) no encajan en este modelo y
   requerirán un ADR propio.
 
 ## Documentos relacionados
 
 - `docs/SPEC.md` §4 (Decisiones 1, 2 y 3)
-- `docs/BACKLOG.md` (P1-005, P1-015, P1-020)
+- `docs/BACKLOG.md` (P1-005, P1-015, P1-020, P1-021)
 - ADR-0002 — Arquitectura por capas (reglas de dependencia de capa 1)
 - ADR-0003 — Contrato de la API C (serialización vía `heno.h`)
 - ADR-0004 — Estrategia de implementación del intérprete de la CPU 65C816
 - `docs/refs/65c816-bus.md` — Velocidades de acceso y mapa de memoria
 - `docs/refs/65c816-quirks.md` — MVN/MVP, WAI, STP
-- Spike `feat/P1-bus-sched` (commits `1465799`..`beecc14`) — Prototipo evaluado
+- Spike `spike/P1-bus-sched` (commits `1465799^`..`beecc14`) — Prototipo evaluado (publicado como rama de archivo)
