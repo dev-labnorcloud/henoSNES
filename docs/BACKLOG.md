@@ -40,8 +40,8 @@ Ver `docs/SPEC.md` §7 para las fases completas.
 | P1-002  | CPU 65C816 — ALU y registros (acumulador, índices, status)              | Tests unitarios por opcode                              | TODO   |
 | P1-003  | CPU 65C816 — interrupciones (NMI, IRQ, BRK, COP, RESET)                | Tests de vectores y timing                              | TODO   |
 | P1-004  | CPU 65C816 — conteo de ciclos por acceso al bus                         | Ciclos coinciden con documentación de referencia        | TODO   |
-| P1-005  | Scheduler cooperativo — relojes independientes CPU/PPU/APU (ver ADR-0005) | Sincronización en puntos de acceso compartido           | TODO   |
-| P1-006  | Bus de memoria — mapeo LoROM y HiROM                                    | Lecturas/escrituras en direcciones correctas            | TODO   |
+| P1-005  | Scheduler cooperativo — relojes independientes CPU/PPU/APU (ver ADR-0005) | Sincronización en puntos de acceso compartido           | RESUELTO |
+| P1-006  | Bus de memoria — mapeo LoROM y HiROM                                    | Lecturas/escrituras en direcciones correctas            | RESUELTO |
 | P1-007  | Bus de memoria — WRAM, registros I/O, open bus                          | Tests de acceso a memoria                               | TODO   |
 | P1-008  | PPU — modo 0 (4 backgrounds, 4 colores cada uno)                       | Golden frames de test ROM                               | TODO   |
 | P1-009  | PPU — modo 1 (3 backgrounds, 16/16/4 colores)                          | Golden frames de test ROM                               | TODO   |
@@ -63,3 +63,7 @@ Ver `docs/SPEC.md` §7 para las fases completas.
 
 - **DT-002 (Licencia de documentación):** [RESUELTO] `.reuse/dep5` asigna ahora `GPL-3.0-or-later` a `docs/adr/*.md`, coherente con las cabeceras de los ADR; `docs/refs/*.md` se mantiene en `CC-BY-4.0`.
 - **DT-003 (SPEC sin SPDX):** [RESUELTO] `docs/SPEC.md` tiene ahora cabecera SPDX `GPL-3.0-or-later`.
+- **DT-004 (Formato sin verificar):** el CI no ejecuta clang-format, aunque AGENTS.md indica que se rechazan PRs que no lo pasan; tampoco está disponible en el entorno local de desarrollo.
+- **DT-005 (Advertencias del compilador):** el proyecto no activa advertencias (-Wall/-Wextra, /W4) ni las trata como errores; detectado en P1-006 (includes faltantes que MSVC no reporta).
+- **DT-006 (MSVC sin /EHsc en pruebas):** las pruebas se compilan con la advertencia C4530; Catch2 usa excepciones internamente, por lo que una prueba que falla podría no liberar correctamente sus recursos.
+- **DT-007 (Referencia de quirks sin verificar):** docs/refs/65c816-quirks.md sigue marcada como "derivada del modelo, pendiente de verificación" y debe verificarse contra fuente primaria antes de P1-001.
