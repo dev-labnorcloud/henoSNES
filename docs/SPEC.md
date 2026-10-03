@@ -219,7 +219,7 @@ P-01 · CPU 65C816
 Implementa core/cpu con todas las instrucciones y modos de direccionamiento del 65C816,
 con conteo de ciclos por acceso al bus. Usa la documentación de referencia en docs/refs.
 Agrega pruebas unitarias por opcode y ejecuta los test ROMs de CPU de tests/roms.
-Gate: 100 % en verde. Registra en docs/adr/0003 la estrategia de scheduler.
+Gate: 100 % en verde. Registra en docs/adr/0005 la estrategia de scheduler (ADR-0004 cubre el intérprete de la CPU).
 
 P-02 · PPU modos 0-1 y framebuffer headless
 ...

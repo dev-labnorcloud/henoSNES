@@ -40,7 +40,7 @@ Ver `docs/SPEC.md` §7 para las fases completas.
 | P1-002  | CPU 65C816 — ALU y registros (acumulador, índices, status)              | Tests unitarios por opcode                              | TODO   |
 | P1-003  | CPU 65C816 — interrupciones (NMI, IRQ, BRK, COP, RESET)                | Tests de vectores y timing                              | TODO   |
 | P1-004  | CPU 65C816 — conteo de ciclos por acceso al bus                         | Ciclos coinciden con documentación de referencia        | TODO   |
-| P1-005  | Scheduler cooperativo — relojes independientes CPU/PPU/APU              | Sincronización en puntos de acceso compartido           | TODO   |
+| P1-005  | Scheduler cooperativo — relojes independientes CPU/PPU/APU (ver ADR-0005) | Sincronización en puntos de acceso compartido           | TODO   |
 | P1-006  | Bus de memoria — mapeo LoROM y HiROM                                    | Lecturas/escrituras en direcciones correctas            | TODO   |
 | P1-007  | Bus de memoria — WRAM, registros I/O, open bus                          | Tests de acceso a memoria                               | TODO   |
 | P1-008  | PPU — modo 0 (4 backgrounds, 4 colores cada uno)                       | Golden frames de test ROM                               | TODO   |
@@ -55,4 +55,10 @@ Ver `docs/SPEC.md` §7 para las fases completas.
 | P1-017  | Test ROMs de CPU — suite completa de la comunidad                       | 100% en verde                                           | TODO   |
 | P1-018  | Test ROMs de SPC700 — suite completa de la comunidad                    | 100% en verde                                           | TODO   |
 | P1-019  | Golden frames — 20 ROMs homebrew libres × 300 frames                    | Hashes SHA-256 estables                                 | TODO   |
-| P1-020  | ADR-0003+: Estrategia de scheduler cooperativo                          | ADR en formato MADR                                     | TODO   |
+| P1-020  | ADR-0005: Estrategia de scheduler cooperativo (+ revisión de ADR-0004, Gate A) | ADR en formato MADR                                     | RESUELTO |
+| P1-021  | ADR: formato binario de serialización versionado (pendiente declarado en ADR-0005) | ADR en formato MADR                                     | TODO   |
+
+### Registro de Deuda Técnica (Fase 1)
+
+- **DT-002 (Licencia de documentación):** `.reuse/dep5` asigna `CC-BY-4.0` a `docs/adr/*.md`, pero los ADR usan `GPL-3.0-or-later`. Se debe alinear la política de licencias de documentación.
+- **DT-003 (SPEC sin SPDX):** `docs/SPEC.md` no tiene cabecera SPDX ni cobertura en `dep5`.
