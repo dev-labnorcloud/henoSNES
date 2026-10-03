@@ -3,6 +3,7 @@
 
 add_executable(heno-tests
     test_abi.cpp
+    test_scheduler.cpp
 )
 
 target_link_libraries(heno-tests
