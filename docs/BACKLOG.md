@@ -25,11 +25,11 @@ Ver `docs/SPEC.md` §7 para las fases completas.
 | P0-013  | ADR-0002: Arquitectura por capas                                        | ADR en formato MADR                                     | EN CURSO  |
 | P0-014  | ADR-0003: Contrato de la API C                                          | ADR en formato MADR                                     | EN CURSO  |
 | P0-015  | docs/BACKLOG.md con tareas de fases 0 y 1                               | Backlog documentado                                     | EN CURSO  |
-| P0-016  | Deuda técnica: CI runner macOS x64 Intel (`macos-13`)                  | Monitorear disponibilidad `macos-15-intel` o descontinuar | TODO      |
+| P0-016  | Deuda técnica: CI runner macOS x64 Intel (`macos-13`)                  | Aislado en workflow manual (.github/workflows/ci-macos-x64.yml) | RESUELTO  |
 
 ### Registro de Deuda Técnica (Fase 0)
 
-- **DT-001 (Runner macOS Intel x86_64):** El job `macos-13` en GitHub Actions opera bajo capacidad limitada y alta congestión de cola por la obsolescencia progresiva de hardware Intel en los pools públicos de GitHub. El job se encuentra marcado con `continue-on-error: true` en el CI matrix. Revisar en 2027 si GitHub ofrece runners Intel más modernos (`macos-15-intel`) o consolidar macOS exclusivamente en Apple Silicon (`arm64`) con ejecución x86_64 delegada a Rosetta 2 / binarios universales.
+- **DT-001 (Runner macOS Intel x86_64 manual):** El job `macos-13` en GitHub Actions opera bajo capacidad limitada y alta congestión de cola por la obsolescencia progresiva de hardware Intel en los pools públicos de GitHub. El job ha sido aislado en el workflow independiente `.github/workflows/ci-macos-x64.yml` con disparador manual (`workflow_dispatch`), permitiendo compilar x86_64 bajo demanda sin bloquear el CI estándar en cada PR/push. Revisar en 2027 si GitHub ofrece runners Intel más modernos (`macos-15-intel`) o descontinuar soporte nativo x86_64 a favor de Rosetta 2 / binarios universales.
 
 ## Fase 1 — Núcleo mínimo
 
