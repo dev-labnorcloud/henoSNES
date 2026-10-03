@@ -57,3 +57,5 @@ El comportamiento al envolver (wrap) direcciones varía:
 Para mantener retrocompatibilidad ciclo a ciclo con el 6502 (y el bus timing estricto), el 65C816 a menudo realiza "lecturas basura" (dummy reads) antes de una escritura o durante cruces de página.
 - Esto es crítico en la SNES: una dummy read a un registro de un coprocesador o puerto I/O que tiene efectos secundarios de "lectura destructiva" (read-to-clear) puede consumir un flag prematuramente.
 - Las dummy reads ocurren típicamente en el penúltimo ciclo de instrucciones RMW (Read-Modify-Write) indexadas como `INC a,X` o durante saltos relativos que cruzan límites de página.
+
+> **Fuente**: Derivada del modelo, pendiente de verificaci�n.
