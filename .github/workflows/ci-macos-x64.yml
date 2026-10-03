@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: 2026 henoSNES contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: CI (macOS Intel x86_64)
+
+# TODO(revisar: runner x64): macos-13 es el último runner Intel x86_64
+# de GitHub Actions y está en declive / alta congestión de cola.
+# Se aísla en un workflow manual (workflow_dispatch) para no bloquear
+# el CI estándar en cada PR/push. Revisar en 2027 si GitHub lanza
+# macos-15-intel o descontinuar soporte nativo x86_64 a favor de Rosetta 2.
+on:
+  workflow_dispatch:
+
+env:
+  VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
+
+jobs:
+  build-macos-x64:
+    runs-on: macos-13
+    name: macos-13 (macos-x64)
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: dd3124267f18a2dd4b7107dfa79fe1fbe363b90c
+
+      - name: Export GitHub Actions cache variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Install ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: macos-13-macos-x64
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Configure (CMake)
+        run: >
+          cmake --preset macos-x64-release
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Build
+        run: cmake --build --preset macos-x64-release
+
+      - name: Test
+        run: ctest --preset macos-x64-release --output-on-failure
+
+      - name: Verify heno-cli --version
+        shell: bash
+        run: |
+          ./build/macos-x64-release/tools/heno-cli/heno-cli --version
+
+      - name: Upload heno-cli artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: heno-cli-macos-x64
+          path: build/macos-x64-release/tools/heno-cli/heno-cli
+          if-no-files-found: error
