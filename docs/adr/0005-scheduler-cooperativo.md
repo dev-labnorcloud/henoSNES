@@ -5,7 +5,7 @@
 
 ## Estado
 
-Propuesto
+Aceptado
 
 ## Fecha
 

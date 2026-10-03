@@ -55,7 +55,7 @@ Ver `docs/SPEC.md` §7 para las fases completas.
 | P1-017  | Test ROMs de CPU — suite completa de la comunidad                       | 100% en verde                                           | TODO   |
 | P1-018  | Test ROMs de SPC700 — suite completa de la comunidad                    | 100% en verde                                           | TODO   |
 | P1-019  | Golden frames — 20 ROMs homebrew libres × 300 frames                    | Hashes SHA-256 estables                                 | TODO   |
-| P1-020  | ADR-0005: Estrategia de scheduler cooperativo (+ revisión de ADR-0004, Gate A) | ADR en formato MADR                                     | EN REVISIÓN |
+| P1-020  | ADR-0005: Estrategia de scheduler cooperativo (+ revisión de ADR-0004, Gate A) | ADR en formato MADR                                     | RESUELTO |
 | P1-021  | ADR: formato binario de serialización versionado (pendiente declarado en ADR-0005) | ADR en formato MADR                                     | TODO   |
 
 ### Registro de Deuda Técnica (Fase 1)
