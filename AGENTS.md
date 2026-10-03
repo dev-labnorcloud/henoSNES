@@ -15,7 +15,7 @@ backends gráficos intercambiables (Vulkan 1.3, Direct3D 12, Metal 3, OpenGL 3.3
    Solo se usan las ROMs homebrew con licencia libre listadas en `tests/roms/MANIFEST.json`.
 2. NUNCA incluir BIOS, firmware ni microcódigo propietario. Los coprocesadores se implementan en HLE
    o cargan el archivo que el usuario provea.
-3. NUNCA copiar código de proyectos con licencia incompatible con GPLv3 ni código filtrado.
+3. NUNCA copiar código de proyectos con licencia incompatible con GPLv3, ni usar como fuente código o documentación filtrada (como manuales oficiales confidenciales de Nintendo).
    Todo archivo portado (bsnes, Snes9x, Mesen, libretro) se registra en `THIRD_PARTY_NOTICES.md`
    con URL de origen, commit y licencia.
 4. El nombre "henoSNES" usa "SNES" solo de forma descriptiva. No reproducir logotipos, tipografías
