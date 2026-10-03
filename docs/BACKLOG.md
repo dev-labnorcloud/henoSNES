@@ -35,6 +35,7 @@ Ver `docs/SPEC.md` §7 para las fases completas.
 
 | ID      | Descripción                                                              | Gate                                                    | Estado |
 |---------|--------------------------------------------------------------------------|---------------------------------------------------------|--------|
+| P1-000  | Verificar docs/refs/65c816-opcodes.md contra fuente primaria (Eyes & Lichty, apéndice de opcodes) antes de implementar el intérprete. 256 filas pendientes. | 256 filas verificadas | TODO |
 | P1-001  | CPU 65C816 — decodificador de opcodes y modos de direccionamiento       | Todos los opcodes decodifican correctamente             | TODO   |
 | P1-002  | CPU 65C816 — ALU y registros (acumulador, índices, status)              | Tests unitarios por opcode                              | TODO   |
 | P1-003  | CPU 65C816 — interrupciones (NMI, IRQ, BRK, COP, RESET)                | Tests de vectores y timing                              | TODO   |
