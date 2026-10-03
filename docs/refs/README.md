@@ -13,7 +13,10 @@ Para implementar `core/cpu` y `core/bus` en la tarea **P-01**, los siguientes do
 
 ### 1. CPU WDC 65C816 / W65C816S
 - **Conjunto de instrucciones y modos de direccionamiento:**
-  - Hoja de datos oficial WDC 65C816 (instrucciones, modos de 8 y 16 bits, flags de status, comportamiento de emulación 6502).
+  - Hoja de datos oficial WDC W65C816S (instrucciones, modos de 8 y 16 bits, flags de status, comportamiento de emulación 6502).
+    - Origen: https://www.westerndesigncenter.com/wdc/documentation/w65c816s.pdf
+    - Fecha: 2024-03-13
+    - SHA-256: B9177E1B045D2C8A801D1B23619ABB4E5B29B88868FA491DF7296DBC0B13447E
   - *Programming the 65816 including the 6502, 65C02 and 65802* (David Eyes & Ron Lichty) o transcripción técnica libre.
 - **Detalle de opcodes y ciclos por acceso:**
   - Matriz completa de los 256 opcodes ($00–$FF) con descomposición ciclo a ciclo (acceso a opcode, operando, memoria, stack).
