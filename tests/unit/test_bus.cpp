@@ -3,6 +3,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include "bus/bus.h"
+#include "bus/io_device.h"
 #include "cart/cartridge.h"
 
 using namespace heno;
@@ -34,7 +35,8 @@ TEST_CASE("Bus Behavior", "[bus]") {
     std::vector<std::uint8_t> rom(65536, 0xAA);
     Cartridge cart(rom, MapMode::LoRom);
     MockScheduler sched;
-    Bus<MockScheduler> bus(sched, cart);
+    NullIo io;
+    Bus<MockScheduler, NullIo> bus(sched, cart, io);
     
     SECTION("read8 in ROM advances cycles and returns value") {
         std::uint8_t val = bus.read8(0x008000);
@@ -48,9 +50,9 @@ TEST_CASE("Bus Behavior", "[bus]") {
         REQUIRE(bus.state().open_bus == 0xAA);
         
         // Read unmapped
-        std::uint8_t val = bus.read8(0x000000); // 0x000000 not mapped in cart
+        std::uint8_t val = bus.read8(0x002000); // 0x002000 not mapped in cart nor wram
         REQUIRE(val == 0xAA);
-        REQUIRE(sched.total_cycles == 16); // 8 from first + 8 from second
+        REQUIRE(sched.total_cycles == 14); // 8 from first + 6 from second (0x2000 is 6 cycles)
     }
     
     SECTION("write8 to $420D toggles FastROM") {
