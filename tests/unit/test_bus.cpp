@@ -113,3 +113,74 @@ TEST_CASE("Bus Behavior", "[bus]") {
         REQUIRE(bus.state().fastrom == true);
     }
 }
+
+struct MockIoDevice {
+    std::vector<std::uint32_t> accesses;
+    bool return_value = true;
+    std::uint8_t read_value = 0;
+
+    bool read(std::uint32_t addr, std::uint8_t /*open_bus*/, std::uint8_t& out) noexcept {
+        accesses.push_back(addr);
+        if (return_value) {
+            out = read_value;
+            return true;
+        }
+        return false;
+    }
+
+    bool write(std::uint32_t addr, std::uint8_t /*value*/) noexcept {
+        accesses.push_back(addr);
+        return return_value;
+    }
+};
+static_assert(IoDevice<MockIoDevice>);
+
+TEST_CASE("E/S Routing", "[bus][io]") {
+    std::vector<std::uint8_t> rom(65536, 0x00);
+    Cartridge cart(rom, MapMode::LoRom);
+    MockScheduler sched;
+    MockIoDevice io;
+    Bus<MockScheduler, MockIoDevice> bus(sched, cart, io);
+
+    SECTION("Accesos enrutados al dispositivo de E/S") {
+        std::vector<std::uint32_t> targets = {
+            0x002100, 0x00217F, 0x002184, 0x0021FF, 0x004000, 0x004016, 0x004300
+        };
+        for (auto addr : targets) {
+            bus.read8(addr);
+            REQUIRE(io.accesses.back() == addr);
+            bus.write8(addr, 0xFF);
+            REQUIRE(io.accesses.back() == addr);
+        }
+    }
+
+    SECTION("Accesos no enrutados al dispositivo de E/S") {
+        std::vector<std::uint32_t> targets = {
+            0x002180, 0x002181, 0x002182, 0x002183, 0x00420D
+        };
+        for (auto addr : targets) {
+            bus.read8(addr);
+            bus.write8(addr, 0xFF);
+        }
+        REQUIRE(io.accesses.empty());
+    }
+
+    SECTION("Dispositivo devuelve false -> open bus") {
+        io.return_value = false;
+        bus.write8(0x002000, 0xAB); // set open bus to 0xAB
+        std::uint8_t val = bus.read8(0x002100); // routed to io, but returns false
+        REQUIRE(val == 0xAB);
+    }
+
+    SECTION("Lectura de WRAM actualiza open_bus") {
+        bus.write8(0x7E0000, 0xCD); // escribe en WRAM
+        // escribe otra cosa a un lugar unmapped para cambiar open_bus
+        bus.write8(0x002000, 0x00); 
+        REQUIRE(bus.state().open_bus == 0x00);
+
+        // lee WRAM
+        std::uint8_t val = bus.read8(0x7E0000);
+        REQUIRE(val == 0xCD);
+        REQUIRE(bus.state().open_bus == 0xCD); // open bus actualizado
+    }
+}
