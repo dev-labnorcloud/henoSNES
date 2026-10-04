@@ -7,6 +7,7 @@ add_executable(heno-tests
     test_access_speed.cpp
     test_cartridge.cpp
     test_bus.cpp
+    test_wram.cpp
 )
 
 target_link_libraries(heno-tests
