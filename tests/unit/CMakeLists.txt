@@ -8,6 +8,8 @@ add_executable(heno-tests
     test_cartridge.cpp
     test_bus.cpp
     test_wram.cpp
+    test_cpu_decode.cpp
+    test_opcode_table.cpp
 )
 
 target_link_libraries(heno-tests
