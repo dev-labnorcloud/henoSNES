@@ -14,8 +14,11 @@ Comportamientos especiales del 65C816 necesarios para una emulación ciclo a cic
 
 ## 2. Envolvimiento de direcciones
 
+- El PC es de 16 bits: al pasar de `$FFFF` vuelve a `$0000` sin cambiar PBR, y los saltos relativos envuelven dentro del banco de programa.
+- `JMP (a)` y `JML [a]` leen su puntero en el banco 0; `JMP (a,X)` y `JSR (a,X)` lo leen en el banco de programa. La hoja de datos de WDC (§3.5.2) indica banco 0 para `(a,X)`; se sigue el documento de B. Clark, probado sobre hardware.
+- En modo emulación con DL = `$00`, `(d,X)` lee los dos bytes del puntero dentro de la página directa.
 - Página directa en modo nativo: la dirección (D + desplazamiento + índice) se calcula en 16 bits, puede cruzar páginas y queda confinada al banco 0.
-- Página directa en modo emulación: si DL = `$00`, el direccionamiento directo indexado de los modos heredados del 6502 envuelve dentro de la página (`$xx00-$xxFF`). Si DL ≠ `$00`, no envuelve por página. Las instrucciones y modos nuevos del 65C816 (por ejemplo, PEI) no envuelven por página [verificar el detalle por modo].
+- Página directa en modo emulación: si DL = `$00`, el direccionamiento directo indexado de los modos heredados del 6502 envuelve dentro de la página (`$xx00-$xxFF`). Si DL ≠ `$00`, no envuelve por página. Las instrucciones y modos nuevos del 65C816 no envuelven por página: `[d]`, `[d],Y` y PEI leen su puntero de forma continua aunque DL = `$00` (B. Clark, §5.1.1).
 - Pila: en modo emulación queda confinada a la página 1 (`$0100-$01FF`) para las instrucciones heredadas; en modo nativo S es de 16 bits dentro del banco 0.
 - Con índices de 8 bits (X = 1), los bytes altos de X e Y valen 0. No implica envolvimiento por página fuera de lo descrito arriba.
 
@@ -56,7 +59,7 @@ Comportamientos especiales del 65C816 necesarios para una emulación ciclo a cic
 
 ## Fuentes
 
-- WDC, W65C816S Datasheet, 2024-03-13 (Tablas 5-4 y 5-7, con sus notas).
+- WDC, W65C816S Datasheet, 2024-03-13 (Tablas 5-4 y 5-7, con sus notas), descripción del Program Bank Register y §3.5.2.
 - SNESdev Wiki, "CPU vectors" (https://snes.nesdev.org/wiki/CPU_vectors), contenido CC0.
 - SNESdev Wiki, "Signature byte" (https://snes.nesdev.org/wiki/Signature_byte), contenido CC0.
 - B. Clark, "65C816 Opcodes", tutorial de 6502.org (http://6502.org/tutorials/65c816opcodes.html).
