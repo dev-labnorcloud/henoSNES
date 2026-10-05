@@ -6,6 +6,8 @@
 #include "common/assert.h"
 #include "cpu/cpu_state.h"
 #include "cpu/opcode_table.h"
+#include "cpu/addressing.h"
+#include "cpu/execute.h"
 
 #include <array>
 #include <concepts>
@@ -99,8 +101,16 @@ public:
     }
 
     const DecodeTrace& last_decode() const noexcept { return last_decode_; }
+    const Operand& last_operand() const noexcept { return last_operand_; }
 
 private:
+    template <AddrMode> friend struct Resolve;
+    template <Mnemonic> friend struct Exec;
+
+    // Lee un byte del bus.
+    std::uint8_t read8(std::uint32_t addr) noexcept {
+        return bus_.read8(addr);
+    }
     // Un handler por opcode y modo. M8 / X8 = true: registro de 8 bits.
     template <std::uint8_t Op, bool E, bool M8, bool X8>
     static void handler(Cpu& cpu) noexcept {
@@ -116,9 +126,8 @@ private:
             kInfo.mode,
             kLength,
         };
-        for (std::uint8_t i = 1; i < kLength; ++i) {
-            static_cast<void>(cpu.fetch8());
-        }
+        cpu.last_operand_ = Resolve<kInfo.mode>::template run<E, M8, X8>(cpu, kInfo);
+        Exec<kInfo.mnemonic>::template run<E, M8, X8>(cpu, cpu.last_operand_);
     }
 
     template <bool E, bool M8, bool X8, std::size_t... I>
@@ -149,8 +158,7 @@ private:
     std::uint8_t fetch8() noexcept {
         const std::uint32_t addr = (static_cast<std::uint32_t>(state_.pbr) << 16) | state_.pc;
         const std::uint8_t value = bus_.read8(addr);
-        // [verificar] pc es de 16 bits: al avanzar envuelve de $FFFF a $0000 sin cambiar pbr
-        // (la búsqueda de instrucciones no cruza al banco siguiente).
+        // PC es de 16 bits y envuelve dentro del banco: la hoja de datos de WDC indica que el Program Bank Register no cambia al incrementar el PC desde $FFFF.
         state_.pc = static_cast<std::uint16_t>(state_.pc + 1u);
         return value;
     }
@@ -164,6 +172,7 @@ private:
     CpuState state_{};
     const HandlerTable* active_table_{nullptr};
     DecodeTrace last_decode_{};
+    Operand last_operand_{};
 };
 
 } // namespace heno

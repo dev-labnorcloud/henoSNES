@@ -37,7 +37,7 @@ Ver `docs/SPEC.md` §7 para las fases completas.
 |---------|--------------------------------------------------------------------------|---------------------------------------------------------|--------|
 | P1-000  | Verificar docs/refs/65c816-opcodes.md contra fuente primaria (hoja de datos WDC W65C816S 2024-03-13, Tablas 5-4 y 5-7) antes de implementar el intérprete. 256 filas verificadas. | 256 filas verificadas | RESUELTO |
 | P1-001a | CPU 65C816 — tabla de decodificación, estado y despacho (ADR-0004)      | Los 256 opcodes decodifican correctamente en los 5 modos | RESUELTO |
-| P1-001b | CPU 65C816 — modos de direccionamiento y direcciones efectivas          | Tests por modo, incluidos los casos de envolvimiento    | TODO   |
+| P1-001b | CPU 65C816 — modos de direccionamiento y direcciones efectivas          | Tests por modo, incluidos los casos de envolvimiento    | RESUELTO |
 | P1-002  | CPU 65C816 — ALU y registros (acumulador, índices, status)              | Tests unitarios por opcode                              | TODO   |
 | P1-003  | CPU 65C816 — interrupciones (NMI, IRQ, BRK, COP, RESET)                | Tests de vectores y timing                              | TODO   |
 | P1-004  | CPU 65C816 — conteo de ciclos por acceso al bus                         | Ciclos coinciden con documentación de referencia        | TODO   |

@@ -10,6 +10,7 @@ add_executable(heno-tests
     test_wram.cpp
     test_cpu_decode.cpp
     test_opcode_table.cpp
+    test_addressing.cpp
 )
 
 target_link_libraries(heno-tests
